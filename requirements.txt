@@ -1,8 +1,8 @@
-django==4.2.7
-django-crispy-forms==2.1
-crispy-bootstrap4==2022.1
+Django==4.2.7
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
+django-crispy-forms==2.1
+crispy-bootstrap4==2022.1
 Pillow==10.1.0
 python-decouple==3.8
 gunicorn==21.2.0
