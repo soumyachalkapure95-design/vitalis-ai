@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Disease Predictor | Vitalis AI{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Form Section -->
+    <div class="col-lg-8">
+        <div class="card glass-card border-0 p-4 mb-4">
+            <h2 class="mb-2"><i class="fa-solid fa-stethoscope text-primary me-2"></i> Disease Symptom Checker</h2>
+            <p class="text-muted">Select all symptoms you are experiencing. Our local ML predictor will analyze the inputs to estimate potential matching conditions.</p>
+            
+            <!-- JavaScript Search Box -->
+            <div class="mb-4 mt-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px;">
+                        <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                    </span>
+                    <input type="text" id="symptomSearch" class="form-control form-control-custom border-start-0" placeholder="Search symptoms (e.g. headache, fever, cough)..." style="border-radius: 0 10px 10px 0;">
+                </div>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <!-- Selected Symptoms Counter / Clear Option -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-semibold"><span id="selectedCount" class="badge bg-primary">0</span> symptoms selected</span>
+                    <button type="button" id="clearBtn" class="btn btn-sm btn-outline-secondary">Clear All</button>
+                </div>
+                
+                <!-- Symptom Checkbox Container -->
+                <div class="symptoms-container border rounded-3 p-3 bg-light bg-opacity-50 mb-4" style="max-height: 350px; overflow-y: auto;">
+                    <div class="row g-2" id="symptomsGrid">
+                        {% for symptom in symptoms %}
+                            <div class="col-md-6 col-lg-4 symptom-item" data-symptom-name="{{ symptom.label|lower }}">
+                                <div class="symptom-pill-wrapper">
+                                    <input type="checkbox" name="symptoms" id="sym_{{ forloop.counter }}" value="{{ symptom.value }}" class="btn-check symptom-checkbox" autocomplete="off">
+                                    <label class="btn btn-outline-secondary w-100 text-start text-truncate py-2 px-3 d-flex align-items-center justify-content-between" for="sym_{{ forloop.counter }}">
+                                        <span>{{ symptom.label }}</span>
+                                        <i class="fa-solid fa-circle-check fs-6 opacity-0 select-icon"></i>
+                                    </label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-premium w-100 py-3 fs-5"><i class="fa-solid fa-wand-magic-sparkles me-2"></i> Run AI Diagnosis</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Prediction Results Section -->
+    <div class="col-lg-4">
+        {% if prediction %}
+            <div class="card border-0 shadow-lg mb-4 text-white" style="background: linear-gradient(135deg, var(--primary) 0%, #065f46 100%); border-radius: 20px;">
+                <div class="card-body p-4 text-center">
+                    <div class="fs-1 mb-2"><i class="fa-solid fa-circle-check"></i></div>
+                    <h5 class="card-title text-white-50 uppercase tracking-wide">Analysis Complete</h5>
+                    <h2 class="fw-bold mb-3">{{ prediction }}</h2>
+                    <hr class="my-3 opacity-25">
+                    
+                    <div class="text-start small mb-4" style="line-height: 1.6;">
+                        <p class="mb-2"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i><strong>Medical Disclaimer:</strong> This estimate is driven by automated data models and does not substitute a professional diagnosis.</p>
+                        <p class="mb-0"><i class="fa-solid fa-user-doctor text-info me-2"></i>We suggest consulting a healthcare expert to discuss these symptoms.</p>
+                    </div>
+                    
+                    <div class="d-flex flex-column gap-2">
+                        <a href="/telemedicine/book/" class="btn btn-light text-success fw-bold w-100">Schedule Doctor Consultation</a>
+                        <a href="/pharmacy/" class="btn btn-outline-light w-100">Search Related Pharmacy</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Suggested Doctors Nearby -->
+            <div class="card glass-card border-0 p-3 mt-3 shadow-sm" style="border-radius: 15px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px);">
+                <h5 class="fw-bold mb-3 text-dark d-flex align-items-center" style="font-size: 1.1rem;">
+                    <i class="fa-solid fa-user-md text-success me-2"></i>
+                    <span>Suggested Specialists Nearby</span>
+                </h5>
+                <div class="d-flex flex-column gap-3">
+                    {% for doctor in recommended_doctors %}
+                    <div class="doctor-suggestion-card p-3 rounded-3 bg-white border border-light shadow-sm" style="transition: all 0.3s ease; border-radius: 12px !important;">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <img src="{{ doctor.image|default:'https://via.placeholder.com/100?text=Doctor' }}" alt="{{ doctor.name }}" class="rounded-circle shadow-sm border border-2 border-white" style="width: 48px; height: 48px; object-fit: cover;">
+                            <div class="overflow-hidden">
+                                <h6 class="fw-bold mb-0 text-dark text-truncate" style="font-size: 0.95rem;">{{ doctor.name }}</h6>
+                                <span class="badge" style="background-color: #e6f7f0; color: #0d9488; font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px;">{{ doctor.specialization }}</span>
+                            </div>
+                        </div>
+                        <div class="small text-muted mb-2" style="font-size: 0.82rem; line-height: 1.5;">
+                            <div class="mb-1 text-truncate"><i class="fa-solid fa-hospital text-primary me-1" style="width: 14px;"></i> <strong>{{ doctor.hospital.name }}</strong></div>
+                            <div class="text-truncate mb-1" title="{{ doctor.hospital.address }}"><i class="fa-solid fa-location-dot text-danger me-1" style="width: 14px;"></i> {{ doctor.hospital.address }}</div>
+                            <div><i class="fa-solid fa-star text-warning me-1" style="width: 14px;"></i> {{ doctor.rating }} | {{ doctor.experience }} yrs exp | <strong>₹{{ doctor.consultation_fee|floatformat:0 }}</strong></div>
+                        </div>
+                        <a href="/telemedicine/book/?doctor_id={{ doctor.user.id }}" class="btn btn-sm btn-success w-100 py-2 fw-semibold" style="border-radius: 8px; font-size: 0.85rem; background-color: var(--primary); border-color: var(--primary);">
+                            <i class="fa-solid fa-calendar-check me-1"></i> Book Consultation
+                        </a>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0 text-center py-2">No recommended doctors found nearby.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="card glass-card border-0 p-4 text-center h-100 d-flex flex-column justify-content-center">
+                <div class="text-muted fs-1 mb-3"><i class="fa-solid fa-shield-heart"></i></div>
+                <h5>Diagnostic Dashboard</h5>
+                <p class="text-muted small">Select your symptoms on the left and submit. Your prediction history will be registered in your user logs.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Doctor Suggestion Card Hover Effect */
+    .doctor-suggestion-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08) !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    /* Styling check box buttons */
+    .btn-check:checked + label {
+        background-color: var(--primary-light) !important;
+        border-color: var(--primary) !important;
+        color: var(--primary) !important;
+        font-weight: 600;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
+    }
+    
+    .btn-check:checked + label .select-icon {
+        opacity: 1 !important;
+        color: var(--primary);
+    }
+    
+    .symptom-pill-wrapper label {
+        border-radius: 10px;
+        font-size: 0.9rem;
+        background-color: white;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .symptom-pill-wrapper label:hover {
+        border-color: #cbd5e1;
+        background-color: #f8fafc;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById("symptomSearch");
+        const symptomItems = document.querySelectorAll(".symptom-item");
+        const checkboxes = document.querySelectorAll(".symptom-checkbox");
+        const selectedCount = document.getElementById("selectedCount");
+        const clearBtn = document.getElementById("clearBtn");
+
+        // Client-side instant filter search
+        searchInput.addEventListener("input", function() {
+            const query = searchInput.value.toLowerCase().trim();
+            symptomItems.forEach(item => {
+                const name = item.getAttribute("data-symptom-name");
+                if (name.includes(query)) {
+                    item.style.display = "block";
+                } else {
+                    item.style.display = "none";
+                }
+            });
+        });
+
+        // Update selected symptoms count
+        function updateCount() {
+            let count = 0;
+            checkboxes.forEach(cb => {
+                if (cb.checked) count++;
+            });
+            selectedCount.textContent = count;
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener("change", updateCount);
+        });
+
+        // Clear all checkboxes
+        clearBtn.addEventListener("click", function() {
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+            });
+            updateCount();
+        });
+    });
+</script>
+{% endblock %}

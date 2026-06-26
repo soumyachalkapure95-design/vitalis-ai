@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard | Vitalis AI{% endblock %}
+
+{% block content %}
+<div class="row mb-4 gy-4">
+    <!-- User Profile Summary Card -->
+    <div class="col-lg-4">
+        <div class="card glass-card border-0 p-4 text-center">
+            <div class="accent-gradient fs-1 mb-2">
+                <i class="fa-solid fa-circle-user" style="font-size: 4.5rem;"></i>
+            </div>
+            <h3 class="mb-1">{{ user.username }}</h3>
+            <span class="role-badge badge-{{ user.role }} mb-4 d-inline-block mx-auto">{{ user.role }}</span>
+            
+            <div class="text-start border-top pt-3">
+                <p class="mb-2"><strong class="text-muted"><i class="fa-solid fa-envelope me-2"></i> Email:</strong> <span class="float-end">{{ user.email|default:"None" }}</span></p>
+                <p class="mb-2"><strong class="text-muted"><i class="fa-solid fa-phone me-2"></i> Phone:</strong> <span class="float-end">{{ user.phone|default:"None" }}</span></p>
+                <p class="mb-0"><strong class="text-muted"><i class="fa-solid fa-cake-candles me-2"></i> DOB:</strong> <span class="float-end">{{ user.date_of_birth|default:"None" }}</span></p>
+            </div>
+        </div>
+        
+        <!-- Emergency SOS Quick Access -->
+        <div class="card bg-danger-subtle border border-danger-subtle p-3 mt-4 text-center" style="border-radius: 16px;">
+            <h5 class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i> Crisis Mode</h5>
+            <p class="small text-danger-emphasis">Need urgent assistance? Trigger geolocation alert now.</p>
+            <a href="/emergency/" class="btn btn-danger w-100 fw-bold">Open SOS Central</a>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Metrics -->
+    <div class="col-lg-8">
+        {% if user.role == 'doctor' %}
+            <!-- DOCTOR DASHBOARD VIEW -->
+            <div class="card glass-card border-0 p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0"><i class="fa-solid fa-calendar-check text-primary me-2"></i> Patient Consultations</h4>
+                    <span class="badge bg-secondary rounded-pill">Total: {{ appointments|length }}</span>
+                </div>
+                
+                {% if appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Date</th>
+                                    <th>Symptoms</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appt in appointments %}
+                                    <tr>
+                                        <td class="fw-semibold">{{ appt.patient.username }}</td>
+                                        <td>{{ appt.date }} <small class="text-muted">({{ appt.time_slot }})</small></td>
+                                        <td class="text-truncate" style="max-width: 150px;">{{ appt.symptoms }}</td>
+                                        <td>
+                                            {% if appt.status == 'Pending' %}
+                                                <span class="badge bg-warning text-dark">{{ appt.status }}</span>
+                                            {% elif appt.status == 'Approved' %}
+                                                <span class="badge bg-primary">{{ appt.status }}</span>
+                                            {% elif appt.status == 'Completed' %}
+                                                <span class="badge bg-success">{{ appt.status }}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ appt.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="/telemedicine/manage/{{ appt.id }}/" class="btn btn-sm btn-outline-primary">Manage</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted my-3">No upcoming telemedicine consultations booked.</p>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <!-- PATIENT DASHBOARD VIEW -->
+            
+            <!-- Health Records Quick Summary -->
+            <div class="card glass-card border-0 p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0"><i class="fa-solid fa-file-medical text-primary me-2"></i> Medical Record Summary</h4>
+                    <a href="/records/add/" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-plus me-1"></i> Add Record</a>
+                </div>
+                
+                {% if records %}
+                    {% for record in records %}
+                        <div class="p-3 border rounded-3 mb-2 bg-light bg-opacity-50">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-bold">Age: <span class="text-secondary">{{ record.age }}</span></span>
+                                <span class="badge bg-primary-subtle text-primary">Blood Group: {{ record.blood_group }}</span>
+                            </div>
+                            <p class="mb-1 small"><strong>Allergies:</strong> {{ record.allergies|default:"None logged" }}</p>
+                            <p class="mb-0 small"><strong>Medications:</strong> {{ record.medications|default:"None logged" }}</p>
+                        </div>
+                    {% endfor %}
+                    <div class="text-end mt-3">
+                        <a href="/records/" class="btn btn-sm btn-premium-sec">View All Records</a>
+                    </div>
+                {% else %}
+                    <div class="text-center p-3">
+                        <p class="text-muted">No health profile created yet. Please initialize your medical folder.</p>
+                        <a href="/records/add/" class="btn btn-premium btn-sm">Create Medical Folder</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Telemedicine Bookings -->
+            <div class="card glass-card border-0 p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0"><i class="fa-solid fa-user-doctor text-secondary me-2"></i> Telemedicine Appointments</h4>
+                    <a href="/telemedicine/book/" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-plus me-1"></i> Book New</a>
+                </div>
+                
+                {% if appointments %}
+                    <ul class="list-group list-group-flush">
+                        {% for appt in appointments %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0 py-3">
+                                <div>
+                                    <h6 class="mb-1">Consultation with Dr. {{ appt.doctor.username }}</h6>
+                                    <small class="text-muted"><i class="fa-regular fa-calendar me-1"></i> {{ appt.date }} at {{ appt.time_slot }}</small>
+                                </div>
+                                <span class="badge 
+                                    {% if appt.status == 'Pending' %}bg-warning text-dark
+                                    {% elif appt.status == 'Approved' %}bg-primary
+                                    {% elif appt.status == 'Completed' %}bg-success
+                                    {% else %}bg-danger{% endif %} rounded-pill px-3 py-1.5">
+                                    {{ appt.status }}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted my-2">No telemedicine consultations requested.</p>
+                {% endif %}
+            </div>
+
+            <div class="row g-4">
+                <!-- Recent Mood Journal -->
+                <div class="col-md-6">
+                    <div class="card glass-card border-0 p-4 h-100">
+                        <h5 class="mb-3"><i class="fa-solid fa-face-smile text-warning me-2"></i> Recent Mind check</h5>
+                        {% if moods %}
+                            <ul class="list-unstyled mb-0">
+                                {% for m in moods %}
+                                    <li class="mb-3 d-flex align-items-start gap-2">
+                                        <span class="fs-4">
+                                            {% if m.mood == 'Happy' %}😊
+                                            {% elif m.mood == 'Calm' %}😌
+                                            {% elif m.mood == 'Anxious' %}😰
+                                            {% elif m.mood == 'Sad' %}😢
+                                            {% else %}😴{% endif %}
+                                        </span>
+                                        <div>
+                                            <div class="small fw-semibold">{{ m.mood }} <span class="text-muted font-weight-normal small">({{ m.date }})</span></div>
+                                            <div class="small text-muted text-truncate" style="max-width: 200px;">{{ m.notes }}</div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <a href="/mental-health/" class="btn btn-sm btn-outline-warning mt-auto align-self-start">Mood Tracker</a>
+                        {% else %}
+                            <p class="text-muted small">No mood logs saved.</p>
+                            <a href="/mental-health/" class="btn btn-sm btn-outline-warning mt-auto align-self-start">Log First Mood</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Recent Symptom Tracker Predictions -->
+                <div class="col-md-6">
+                    <div class="card glass-card border-0 p-4 h-100">
+                        <h5 class="mb-3"><i class="fa-solid fa-stethoscope text-primary me-2"></i> Symptom Predictions</h5>
+                        {% if predictions %}
+                            <ul class="list-unstyled mb-0">
+                                {% for p in predictions %}
+                                    <li class="mb-2.5 pb-2 border-bottom last-border-none">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-semibold text-truncate" style="max-width:140px;">{{ p.predicted_disease }}</span>
+                                            <small class="text-muted">{{ p.created_at|date:"M d" }}</small>
+                                        </div>
+                                        <div class="small text-muted text-truncate" style="max-width: 220px;">Symptoms: {{ p.symptoms }}</div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <a href="/disease-tracker/" class="btn btn-sm btn-outline-primary mt-auto align-self-start">Check Symptoms</a>
+                        {% else %}
+                            <p class="text-muted small">No symptom checks executed yet.</p>
+                            <a href="/disease-tracker/" class="btn btn-sm btn-outline-primary mt-auto align-self-start">Run Symptom Check</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

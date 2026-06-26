@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Pharmacy Catalog | Vitalis AI{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="fa-solid fa-capsules text-primary me-2"></i> Pharmacy & Medication Guide</h2>
+    <p class="text-muted">Browse verified medications, check standard dosages, warning side-effects, and retail prices.</p>
+</div>
+
+<!-- Search and Filter Panel -->
+<div class="card glass-card border-0 p-4 mb-4">
+    <form method="GET" class="row g-3">
+        <div class="col-md-6 col-lg-7">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px;"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" class="form-control form-control-custom border-start-0" placeholder="Search medication name, purpose or description..." value="{{ query }}" style="border-radius: 0 10px 10px 0;">
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <select name="category" class="form-select form-control-custom">
+                <option value="">-- All Categories --</option>
+                {% for category in categories %}
+                    <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-premium w-100 py-2.5">Search</button>
+        </div>
+    </form>
+</div>
+
+<!-- Medications Cards Grid -->
+<div class="row g-4">
+    {% if medicines %}
+        {% for medicine in medicines %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card glass-card border-0 h-100 d-flex flex-column justify-content-between overflow-hidden shadow-sm" style="border-radius: 16px; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                    <div>
+                        {% if medicine.image %}
+                            <div class="position-relative" style="height: 180px; overflow: hidden; border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                                <img src="{{ medicine.image }}" alt="{{ medicine.name }}" class="w-100 h-100 medicine-card-img" style="object-fit: cover; transition: transform 0.3s ease;">
+                            </div>
+                        {% else %}
+                            <div class="position-relative bg-light d-flex align-items-center justify-content-center" style="height: 180px; border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                                <i class="fa-solid fa-pills text-muted fs-1"></i>
+                            </div>
+                        {% endif %}
+                        <div class="p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h4 class="card-title text-slate-800 mb-0" style="font-size: 1.15rem; font-weight: 700; line-height: 1.3;">{{ medicine.name }}</h4>
+                                <span class="badge" style="background-color: #f1f5f9; color: #475569; font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; height: fit-content; white-space: nowrap;">
+                                    {{ medicine.category }}
+                                </span>
+                            </div>
+                            
+                            <p class="text-muted small mb-3" style="line-height: 1.5; min-height: 48px;">{{ medicine.description }}</p>
+                            
+                            <div class="mb-3">
+                                <span class="fw-bold small text-slate-700" style="font-size: 0.8rem;"><i class="fa-solid fa-notes-medical text-primary me-2"></i> Primary Use:</span>
+                                <p class="text-muted small mb-0">{{ medicine.use }}</p>
+                            </div>
+                            
+                            <!-- Collapsible details for premium interactive experience -->
+                            <div class="accordion accordion-flush" id="medAccordion_{{ medicine.id }}">
+                                <div class="accordion-item bg-transparent border-0">
+                                    <h2 class="accordion-header" id="headingOne_{{ medicine.id }}">
+                                        <button class="accordion-button collapsed bg-transparent px-0 py-2 fs-6 fw-semibold text-secondary" style="font-size: 0.85rem; border: none; box-shadow: none;" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne_{{ medicine.id }}" aria-expanded="false" aria-controls="collapseOne_{{ medicine.id }}">
+                                            Dosage & Warnings
+                                        </button>
+                                    </h2>
+                                    <div id="collapseOne_{{ medicine.id }}" class="accordion-collapse collapse" aria-labelledby="headingOne_{{ medicine.id }}" data-bs-parent="#medAccordion_{{ medicine.id }}">
+                                        <div class="accordion-body px-0 py-2" style="border: none;">
+                                            <div class="mb-2">
+                                                <strong class="small text-slate-800" style="font-size: 0.8rem;"><i class="fa-solid fa-clock text-primary me-1"></i> Dosage:</strong>
+                                                <p class="text-muted small mb-0" style="font-size: 0.78rem;">{{ medicine.dosage }}</p>
+                                            </div>
+                                            <div>
+                                                <strong class="small text-danger" style="font-size: 0.8rem;"><i class="fa-solid fa-triangle-exclamation text-danger me-1"></i> Side Effects:</strong>
+                                                <p class="text-muted small mb-0" style="font-size: 0.78rem;">{{ medicine.side_effects }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-top pt-3 px-4 pb-4 d-flex justify-content-between align-items-center bg-light bg-opacity-25">
+                        <div>
+                            <span class="text-muted small" style="font-size: 0.75rem;">Indicative Price:</span>
+                            <h4 class="mb-0 text-primary fw-bold" style="font-size: 1.3rem;">${{ medicine.price }}</h4>
+                        </div>
+                        <a href="/telemedicine/book/" class="btn btn-sm btn-premium d-flex align-items-center gap-1.5 px-3 py-2 fw-semibold" style="border-radius: 8px; font-size: 0.85rem;">
+                            <i class="fa-solid fa-prescription-bottle-medical"></i> Consult Doctor
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="fs-1 text-muted mb-3"><i class="fa-solid fa-tablets"></i></div>
+            <h4 class="text-muted">No Medicines Found</h4>
+            <p class="text-muted small">Try refining your search terms or choosing another category.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08) !important;
+    }
+    .glass-card:hover .medicine-card-img {
+        transform: scale(1.06);
+    }
+</style>
+{% endblock %}

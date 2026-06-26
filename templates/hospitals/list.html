@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Find Nearby Hospitals | Vitalis AI{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="fa-solid fa-hospital text-primary me-2"></i> Medical Center & Bed Directory</h2>
+    <p class="text-muted">Locate clinics, filter by medical specialty or location, and monitor active bed availability.
+    </p>
+</div>
+
+<!-- Search and Filter Form -->
+<div class="card glass-card border-0 p-4 mb-4">
+    <form method="GET" class="row g-3">
+        <div class="col-md-6 col-lg-7">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px;"><i
+                        class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" class="form-control form-control-custom border-start-0"
+                    placeholder="Search hospital name or specialty (e.g., Cardiology)..." value="{{ query }}"
+                    style="border-radius: 0 10px 10px 0;">
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <select name="city" class="form-select form-control-custom">
+                <option value="">-- All Cities --</option>
+                {% for city in cities %}
+                <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-premium w-100 py-2.5">Apply Filters</button>
+        </div>
+    </form>
+</div>
+
+<!-- Hospital Cards Grid -->
+<div class="row g-4">
+    {% if hospitals %}
+    {% for hospital in hospitals %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card glass-card border-0 p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h4 class="card-title text-slate-800 mb-0 text-truncate" style="max-width: 80%;">{{ hospital.name }}
+                    </h4>
+                    <span
+                        class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 font-weight-600 rounded">
+                        <i class="fa-solid fa-star me-1"></i>{{ hospital.rating }}
+                    </span>
+                </div>
+
+                <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot me-2"></i>{{ hospital.address }}, {{
+                    hospital.city }}</p>
+                <p class="text-muted small mb-3"><i class="fa-solid fa-phone me-2"></i><a
+                        href="tel:{{ hospital.phone }}">{{ hospital.phone }}</a></p>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold small text-secondary mb-2">Specialties:</h6>
+                    <div class="d-flex flex-wrap gap-1.5">
+                        {% for specialty in hospital.get_specialties_list %}
+                        <span class="badge bg-light text-secondary border px-2.5 py-1">{{ specialty }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-top pt-3">
+                <div class="d-flex justify-content-between align-items-center mb-1.5 small">
+                    <strong>Bed Capacity:</strong>
+                    <span
+                        class="fw-semibold {% if hospital.beds_available <= 5 %}text-danger{% elif hospital.beds_available <= 15 %}text-warning{% else %}text-success{% endif %}">
+                        {{ hospital.beds_available }} Beds Vacant
+                    </span>
+                </div>
+
+                <!-- Bed Occupancy progress bar -->
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar 
+                                {% if hospital.beds_available <= 5 %}bg-danger
+                                {% elif hospital.beds_available <= 15 %}bg-warning
+                                {% else %}bg-success{% endif %}" role="progressbar"
+                        style="width: {{ hospital.bed_percentage }}%" aria-valuenow="{{ hospital.beds_available }}"
+                        aria-valuemin="0" aria-valuemax="50">
+                    </div>
+                </div>
+
+                <!-- Doctors Accordion -->
+                <div class="accordion accordion-flush mt-3 border-top pt-2" id="doctorAccordion_{{ hospital.id }}">
+                    <div class="accordion-item bg-transparent">
+                        <h2 class="accordion-header" id="docHeading_{{ hospital.id }}">
+                            <button class="accordion-button collapsed bg-transparent px-0 py-2 fs-6 fw-semibold text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#docCollapse_{{ hospital.id }}" aria-expanded="false" aria-controls="docCollapse_{{ hospital.id }}">
+                                <i class="fa-solid fa-user-doctor me-1.5"></i> Meet Our Doctors ({{ hospital.doctors.all|length }})
+                            </button>
+                        </h2>
+                        <div id="docCollapse_{{ hospital.id }}" class="accordion-collapse collapse" aria-labelledby="docHeading_{{ hospital.id }}" data-bs-parent="#doctorAccordion_{{ hospital.id }}">
+                            <div class="accordion-body px-0 py-2">
+                                {% for doctor in hospital.doctors.all %}
+                                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                                        <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 42px; height: 42px; font-size: 0.85rem; flex-shrink: 0; background-color: rgba(16, 185, 129, 0.1);">
+                                            {{ doctor.name|slice:":4" }}
+                                        </div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="d-flex justify-content-between align-items-center mb-0.5">
+                                                <h6 class="mb-0 fw-bold text-slate-800 text-truncate" style="font-size: 0.9rem;">{{ doctor.name }}</h6>
+                                                <span class="text-warning small fw-semibold" style="font-size: 0.8rem;"><i class="fa-solid fa-star me-0.5"></i>{{ doctor.rating }}</span>
+                                            </div>
+                                            <p class="mb-0 text-muted small text-truncate" style="font-size: 0.8rem;">{{ doctor.specialization }} &bull; <strong class="text-secondary">{{ doctor.qualification }}</strong></p>
+                                            <p class="mb-0 text-muted small" style="font-size: 0.8rem;"><i class="fa-solid fa-briefcase me-1"></i> {{ doctor.experience }} Yrs Exp &bull; <strong class="text-dark">₹{{ doctor.consultation_fee|floatformat:0 }}</strong></p>
+                                            <div class="mt-1.5 d-flex flex-wrap gap-1">
+                                                {% for slot in doctor.get_slots_list %}
+                                                    <span class="badge bg-light text-secondary border px-1.5 py-0.5" style="font-size: 0.65rem;">{{ slot }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <a href="/telemedicine/book/?doctor_id={{ doctor.user.id }}" class="btn btn-sm btn-premium px-2 py-1.5" style="font-size: 0.75rem; border-radius: 6px;" title="Book Appointment">
+                                            <i class="fa-solid fa-calendar-check"></i>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <a href="tel:{{ hospital.phone }}" class="btn btn-sm btn-outline-secondary w-50"><i
+                            class="fa-solid fa-phone me-1"></i> Call Clinic</a>
+                    <a href="/telemedicine/book/" class="btn btn-sm btn-premium w-50"><i
+                            class="fa-solid fa-calendar-check me-1"></i> Book Appointment</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="fs-1 text-muted mb-3"><i class="fa-solid fa-house-medical-flag"></i></div>
+        <h4 class="text-muted">No Hospitals Found</h4>
+        <p class="text-muted small">Try refining your search query or choosing another city.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

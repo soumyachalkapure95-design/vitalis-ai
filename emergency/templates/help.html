@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency SOS Central | Vitalis AI{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-5">
+    <!-- SOS Trigger Card -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-lg p-4 text-center text-white" style="background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%); border-radius: 20px;">
+            <div class="card-body py-5">
+                <h2 class="fw-bold mb-3"><i class="fa-solid fa-circle-exclamation me-2"></i> INSTANT SOS BROADCAST</h2>
+                <p class="text-white-50 mb-5">Clicking the button below will use your device browser's Geolocation API to read your coordinates and alert rescue staff immediately.</p>
+                
+                <!-- SOS Trigger Button -->
+                <div class="d-flex align-items-center justify-content-center mb-5">
+                    <button id="sosButton" class="sos-main-btn d-flex flex-column align-items-center justify-content-center text-white border-0 shadow-lg">
+                        <i class="fa-solid fa-truck-medical fs-1 mb-2"></i>
+                        <span class="fw-extrabold fs-4">TRIGGER SOS</span>
+                    </button>
+                </div>
+                
+                <!-- Status/Feedback Panel -->
+                <div id="sosStatus" class="alert alert-light text-dark d-none rounded-3 py-3 font-weight-500 shadow-sm" role="alert">
+                    <span id="sosStatusText">Tracking location...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Contacts Card -->
+    <div class="col-lg-5">
+        <div class="card glass-card border-0 p-4 h-100">
+            <h4 class="mb-4 text-slate-800"><i class="fa-solid fa-phone-volume text-danger me-2"></i> Hotline Directories</h4>
+            
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 border">
+                        <div>
+                            <h5 class="mb-1 text-slate-800">Ambulance Services</h5>
+                            <span class="text-muted small">Medical trauma response</span>
+                        </div>
+                        <a href="tel:108" class="btn btn-danger fw-bold px-3 py-2">Call 108</a>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 border">
+                        <div>
+                            <h5 class="mb-1 text-slate-800">Police Patrol</h5>
+                            <span class="text-muted small">Law enforcement dispatch</span>
+                        </div>
+                        <a href="tel:100" class="btn btn-outline-danger fw-semibold px-3 py-2">Call 100</a>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 border">
+                        <div>
+                            <h5 class="mb-1 text-slate-800">Fire Brigade</h5>
+                            <span class="text-muted small">Fire rescue control</span>
+                        </div>
+                        <a href="tel:101" class="btn btn-outline-danger fw-semibold px-3 py-2">Call 101</a>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 border">
+                        <div>
+                            <h5 class="mb-1 text-slate-800">Women Helpline</h5>
+                            <span class="text-muted small">Crisis safety support</span>
+                        </div>
+                        <a href="tel:1091" class="btn btn-outline-danger fw-semibold px-3 py-2">Call 1091</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Supervisors SOS Logs -->
+{% if alerts %}
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card glass-card border-0 p-4 border border-danger">
+            <h4 class="text-danger mb-3"><i class="fa-solid fa-bell-concierge me-2"></i> Active Emergency Alarms</h4>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-danger">
+                        <tr>
+                            <th>User</th>
+                            <th>Time</th>
+                            <th>Description</th>
+                            <th>Coordinates</th>
+                            <th>Map Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in alerts %}
+                            <tr>
+                                <td class="fw-bold">{{ alert.user.username|default:"Anonymous Guest" }}</td>
+                                <td>{{ alert.created_at }}</td>
+                                <td>{{ alert.description }}</td>
+                                <td>
+                                    {% if alert.latitude and alert.longitude %}
+                                        Lat: {{ alert.latitude|floatformat:4 }}, Lng: {{ alert.longitude|floatformat:4 }}
+                                    {% else %}
+                                        Not provided
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if alert.latitude and alert.longitude %}
+                                        <a href="https://www.google.com/maps?q={{ alert.latitude }},{{ alert.longitude }}" target="_blank" class="btn btn-sm btn-danger"><i class="fa-solid fa-map-location-dot me-1"></i> Track On Map</a>
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    /* Pulsating SOS Button styling */
+    .sos-main-btn {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 10px 30px rgba(220, 38, 38, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        animation: sos-pulse-glow 1.8s infinite;
+    }
+    
+    .sos-main-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 15px 35px rgba(220, 38, 38, 0.6);
+    }
+    
+    .sos-main-btn:active {
+        transform: scale(0.95);
+    }
+
+    @keyframes sos-pulse-glow {
+        0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5), 0 0 0 0 rgba(239, 68, 68, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 0 15px rgba(239, 68, 68, 0), 0 0 0 30px rgba(239, 68, 68, 0.2);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const sosBtn = document.getElementById("sosButton");
+        const sosStatus = document.getElementById("sosStatus");
+        const sosStatusText = document.getElementById("sosStatusText");
+        
+        // CSRF Token fetch utility
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        sosBtn.addEventListener("click", function() {
+            sosStatus.classList.remove("d-none");
+            sosStatusText.textContent = "Requesting device coordinates...";
+            sosStatus.className = "alert alert-warning text-dark rounded-3 py-3 font-weight-500 shadow-sm";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const payload = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            description: "Client SOS triggered via emergency help module."
+                        };
+                        
+                        sendSosPayload(payload);
+                    },
+                    function(error) {
+                        // Location permission denied or timed out
+                        console.warn("Geolocation warning: " + error.message);
+                        sosStatusText.textContent = "Coordinates unavailable. Sending alarm without coordinates...";
+                        
+                        const payload = {
+                            latitude: null,
+                            longitude: null,
+                            description: "Client SOS triggered without geolocation coordinates: " + error.message
+                        };
+                        sendSosPayload(payload);
+                    },
+                    { timeout: 8000 }
+                );
+            } else {
+                sosStatusText.textContent = "Geolocation unsupported. Sending blank SOS alarm...";
+                const payload = {
+                    latitude: null,
+                    longitude: null,
+                    description: "Client SOS triggered. Browser does not support geolocation."
+                };
+                sendSosPayload(payload);
+            }
+        });
+        
+        function sendSosPayload(payload) {
+            const csrftoken = getCookie('csrftoken');
+            
+            fetch("{% url 'trigger_sos' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("HTTP error " + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    sosStatus.className = "alert alert-success text-dark rounded-3 py-3 font-weight-500 shadow-sm";
+                    sosStatusText.innerHTML = '<i class="fa-solid fa-circle-check text-success me-2"></i><strong>SOS Broadcast Active!</strong> Location sent. Rescue dispatch has been alerted.';
+                } else {
+                    sosStatus.className = "alert alert-danger text-dark rounded-3 py-3 font-weight-500 shadow-sm";
+                    sosStatusText.textContent = "SOS failed: " + data.message;
+                }
+            })
+            .catch(error => {
+                console.error("SOS transmission failure: ", error);
+                sosStatus.className = "alert alert-danger text-dark rounded-3 py-3 font-weight-500 shadow-sm";
+                sosStatusText.textContent = "Network error transmitting SOS alert: " + error.message;
+            });
+        }
+    });
+</script>
+{% endblock %}

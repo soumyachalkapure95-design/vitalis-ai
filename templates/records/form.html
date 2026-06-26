@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Vitalis AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card glass-card border-0 p-4 mt-3">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="bg-primary text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px;">
+                        <i class="fa-solid fa-file-signature fs-4"></i>
+                    </div>
+                    <h2 class="mb-0">{{ title }}</h2>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                                {{ field.label }}
+                                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text text-muted" style="font-size: 0.8rem;">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="{% url 'records_list' %}" class="btn btn-outline-secondary w-50 py-2.5">Cancel</a>
+                        <button type="submit" class="btn btn-premium w-50 py-2.5">Save Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Telemedicine Appointments | Vitalis AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="fa-solid fa-user-doctor text-primary me-2"></i> Telemedicine Portal</h2>
+        <p class="text-muted mb-0">
+            {% if user.role == 'doctor' %}
+                Clinician Portal: Manage your consultations and update patient request statuses.
+            {% else %}
+                Book digital clinical consultations and coordinate checkups with medical experts.
+            {% endif %}
+        </p>
+    </div>
+    {% if user.role != 'doctor' %}
+        <a href="{% url 'book_appointment' %}" class="btn btn-premium d-flex align-items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Request Consultation
+        </a>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    {% if appointments %}
+        {% for appt in appointments %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card glass-card border-0 p-4 h-100 position-relative">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h4 class="mb-1 text-slate-800">
+                                <i class="fa-regular fa-calendar-check text-primary me-2"></i>
+                                {% if user.role == 'doctor' %}
+                                    Patient: {{ appt.patient.username }}
+                                {% else %}
+                                    Dr. {{ appt.doctor.username }}
+                                {% endif %}
+                            </h4>
+                            <span class="text-muted small">Specialist consultation</span>
+                        </div>
+                        <span class="badge 
+                            {% if appt.status == 'Pending' %}bg-warning text-dark
+                            {% elif appt.status == 'Approved' %}bg-primary
+                            {% elif appt.status == 'Completed' %}bg-success
+                            {% else %}bg-danger{% endif %} rounded-pill px-3 py-1.5 font-weight-600">
+                            {{ appt.status }}
+                        </span>
+                    </div>
+
+                    <div class="border-top pt-3 flex-grow-1">
+                        <p class="mb-2"><strong><i class="fa-regular fa-calendar me-2"></i> Date:</strong> <span class="float-end">{{ appt.date }}</span></p>
+                        <p class="mb-3"><strong><i class="fa-regular fa-clock me-2"></i> Slot:</strong> <span class="float-end">{{ appt.time_slot }}</span></p>
+                        
+                        <div class="mb-3">
+                            <strong><i class="fa-solid fa-notes-medical me-2"></i> Patient Notes:</strong>
+                            <div class="mt-1 text-muted small bg-light p-2.5 rounded" style="max-height: 80px; overflow-y: auto;">
+                                {{ appt.symptoms }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 border-top pt-3 mt-3">
+                        {% if user.role == 'doctor' or appt.status == 'Pending' %}
+                            <a href="{% url 'manage_appointment' appt.id %}" class="btn btn-sm btn-premium w-100"><i class="fa-solid fa-gear me-1"></i> Manage Appointment</a>
+                        {% else %}
+                            <button class="btn btn-sm btn-outline-secondary w-100" disabled><i class="fa-solid fa-lock me-1"></i> Cannot Modify</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="fs-1 text-muted mb-3"><i class="fa-solid fa-calendar-xmark"></i></div>
+            <h4 class="text-muted">No Consultations Scheduled</h4>
+            <p class="text-muted small mb-4">You have no upcoming telemedicine appointments logged.</p>
+            {% if user.role != 'doctor' %}
+                <a href="{% url 'book_appointment' %}" class="btn btn-premium">Book Appointment</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

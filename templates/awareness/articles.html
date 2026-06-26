@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Health Awareness Blogs | Vitalis AI{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="fa-solid fa-graduation-cap text-primary me-2"></i> Health Awareness & Blogs</h2>
+    <p class="text-muted">Stay informed with physical training guidelines, nutritional facts, and preventative care checklists.</p>
+</div>
+
+<!-- Category Filters -->
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="{% url 'article_list' %}" class="btn btn-sm {% if not selected_category %}btn-premium{% else %}btn-outline-secondary bg-white{% endif %} px-3.5 py-2">
+        All Articles
+    </a>
+    {% for category in categories %}
+        <a href="{% url 'article_list' %}?category={{ category }}" class="btn btn-sm {% if selected_category == category %}btn-premium{% else %}btn-outline-secondary bg-white{% endif %} px-3.5 py-2">
+            {{ category }}
+        </a>
+    {% endfor %}
+</div>
+
+<!-- Blogs Card Grid -->
+<div class="row g-4 mb-5">
+    {% if articles %}
+        {% for article in articles %}
+            <div class="col-md-6">
+                <div class="card glass-card border-0 p-4 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1.5 rounded font-weight-600">
+                                {{ article.category }}
+                            </span>
+                            <small class="text-muted"><i class="fa-regular fa-clock me-1.5"></i>{{ article.read_time }} min read</small>
+                        </div>
+                        
+                        <h4 class="card-title text-slate-800 mb-2">{{ article.title }}</h4>
+                        <p class="text-muted small mb-4">{{ article.summary }}</p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                        <small class="text-muted"><i class="fa-regular fa-calendar me-1.5"></i>{{ article.created_at|date:"M d, Y" }}</small>
+                        <a href="{% url 'article_detail' article.id %}" class="btn btn-sm btn-premium-sec d-flex align-items-center gap-1">
+                            Read Full <i class="fa-solid fa-arrow-right fs-7"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="fs-1 text-muted mb-3"><i class="fa-solid fa-book-open"></i></div>
+            <h4 class="text-muted">No Articles Available</h4>
+            <p class="text-muted small">No articles found in this category.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

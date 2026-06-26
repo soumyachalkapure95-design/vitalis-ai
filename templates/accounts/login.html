@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | Vitalis AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card glass-card border-0 p-4 mt-4">
+            <div class="card-body text-center">
+                <div class="accent-gradient fs-1 mb-2">
+                    <i class="fa-solid fa-circle-user"></i>
+                </div>
+                <h2 class="card-title text-slate-800 mb-2">Welcome Back</h2>
+                <p class="text-muted mb-4">Please log in to your Vitalis account</p>
+
+                {% if error %}
+                    <div class="alert alert-danger d-flex align-items-center gap-2 text-start rounded-3" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div>{{ error }}</div>
+                    </div>
+                {% endif %}
+
+                <form method="POST" class="text-start">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-semibold">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px;"><i class="fa-solid fa-user text-muted"></i></span>
+                            <input type="text" class="form-control form-control-custom border-start-0" id="username" name="username" placeholder="Enter username" style="border-radius: 0 10px 10px 0;" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px;"><i class="fa-solid fa-lock text-muted"></i></span>
+                            <input type="password" class="form-control form-control-custom border-start-0" id="password" name="password" placeholder="Enter password" style="border-radius: 0 10px 10px 0;" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-premium w-100 py-2.5 mb-3">Sign In</button>
+                </form>
+
+                <p class="mb-0 text-muted">
+                    New to Vitalis? <a href="/register/" class="text-primary fw-semibold">Create an account</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
